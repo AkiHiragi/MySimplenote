@@ -13,7 +13,7 @@ public interface INoteService
     Task             DeleteNoteAsync(int  id);
     Task<List<Note>> SearchNotesAsync(string searchTerm);
 
-    Task AddTagToNodeAsync(int noteId, int tagId);
+    Task AddTagToNoteAsync(int noteId, int tagId);
     Task RemoveTagFromNoteAsync(int noteId, int tagId);
     Task<List<Note>> GetNotesByTagAsync(int tagId);
 }

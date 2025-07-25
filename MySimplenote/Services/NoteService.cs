@@ -66,7 +66,7 @@ public class NoteService : INoteService
                             .ToListAsync();
     }
 
-    public async Task AddTagToNodeAsync(int noteId, int tagId)
+    public async Task AddTagToNoteAsync(int noteId, int tagId)
     {
         using var context = new NoteDbContext();
         var       note    = await context.Notes.Include(n => n.Tags).FirstOrDefaultAsync(n => n.Id == noteId);

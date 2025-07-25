@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MySimplenote.Models;
 
@@ -18,21 +19,31 @@ public partial class NoteViewModel : ObservableObject
 
     [ObservableProperty] private bool isSynced;
 
-    public NoteViewModel() { }
+    [ObservableProperty] private ObservableCollection<TagViewModel> tags = [];
+
+    public NoteViewModel()
+    {
+    }
 
     public NoteViewModel(Note note)
     {
-        Id = note.Id;
-        Title = note.Title;
-        Content = note.Content;
+        Id        = note.Id;
+        Title     = note.Title;
+        Content   = note.Content;
         CreatedAt = note.CreatedAt;
         UpdatedAt = note.UpdatedAt;
-        IsSynced = note.IsSynced;
+        IsSynced  = note.IsSynced;
+
+        Tags.Clear();
+        foreach (var tag in note.Tags)
+        {
+            Tags.Add(new TagViewModel(tag));
+        }
     }
 
     public Note ToModel()
     {
-        return new Note
+        var note = new Note
         {
             Id        = Id,
             Title     = Title,
@@ -41,5 +52,12 @@ public partial class NoteViewModel : ObservableObject
             UpdatedAt = UpdatedAt,
             IsSynced  = IsSynced
         };
+
+        foreach (var tagViewModel in Tags)
+        {
+            note.Tags.Add(tagViewModel.ToModel());
+        }
+
+        return note;
     }
 }

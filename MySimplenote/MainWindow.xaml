@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:MySimplenote"
         xmlns:vm="clr-namespace:MySimplenote.ViewModels"
         xmlns:converters="clr-namespace:MySimplenote.Converters"
+        xmlns:views="clr-namespace:MySimplenote.Views"
         mc:Ignorable="d"
         Title="MySimplenote" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
@@ -17,11 +18,12 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
         <!-- Левая панель со списком заметок -->
-        <Border Grid.Column="0" Background="#f5f5f5" BorderBrush="#ddd" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Style="{StaticResource SidebarBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -31,74 +33,50 @@
                 
                 <!-- Заголовок и кнопка создания -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,10">
-                    <TextBlock Text="Заметки" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Content="+" Width="30" Height="30" Margin="10,0,0,0"
+                    <TextBlock Text="Заметки" FontSize="18" Style="{StaticResource SectionHeaderTextStyle}"/>
+                    <Button Content="+" Margin="10,0,0,0"
                             Command="{Binding CreateNoteCommand}"
-                            Background="#4CAF50" Foreground="White" BorderThickness="0"
-                            FontSize="16" FontWeight="Bold"/>
+                            Style="{StaticResource CreateButtonStyle}"/>
                 </StackPanel>
                 
                 <!-- Поиск -->
-                <Border Grid.Row="1" Margin="15,0,15,15" Background="White"
-                        BorderBrush="#ddd" BorderThickness="1" CornerRadius="5">
+                <Border Grid.Row="1" Margin="15,0,15,15" Style="{StaticResource SearchBorderStyle}">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="10,8" BorderThickness="0" Background="Transparent"
-                             FontSize="14">
+                             Style="{StaticResource SearchTextBoxStyle}">
                         <TextBox.InputBindings>
                             <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
                         </TextBox.InputBindings>
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Style.Triggers>
-                                    <Trigger Property="Text" Value="">
-                                        <Setter Property="Background">
-                                            <Setter.Value>
-                                                <VisualBrush AlignmentX="Left" AlignmentY="Center" Stretch="None">
-                                                    <VisualBrush.Visual>
-                                                        <TextBlock Text="Поиск заметок..." Foreground="#999" Margin="2,0"/>
-                                                    </VisualBrush.Visual>
-                                                </VisualBrush>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
                     </TextBox>
                 </Border>
                 
                 <!-- Список заметок -->
                 <ListBox Grid.Row="2" ItemsSource="{Binding Notes}" 
                          SelectedItem="{Binding SelectedNote}"
-                         Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         Style="{StaticResource NotesListBoxStyle}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="15,10" BorderBrush="#eee" BorderThickness="0,0,0,1">
+                            <Border Style="{StaticResource NoteItemBorderStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding Content}" FontSize="12" Foreground="#666"
-                                               TextTrimming="CharacterEllipsis" MaxHeight="40" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource NoteTitleTextStyle}"/>
+                                    <TextBlock Text="{Binding Content}" Style="{StaticResource NoteContentTextStyle}"/>
                                     <TextBlock Text="{Binding UpdatedAt, StringFormat='dd.MM.yyyy HH:mm'}" 
-                                               FontSize="10" Foreground="#999" Margin="0,5,0,0"/>
+                                               Style="{StaticResource NoteDateTextStyle}"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin" Value="0"/>
-                        </Style>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource NoteListBoxItemStyle}"/>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
             </Grid>
         </Border>
         
+        <!-- Панель тэгов -->
+        <views:TagPanel Grid.Column="1" DataContext="{Binding}"/>
+        
         <!-- Правая панель с редактором -->
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -106,59 +84,29 @@
             </Grid.RowDefinitions>
             
             <!-- Заголовок заметки -->
-            <Border Grid.Row="0" Background="White" BorderBrush="#ddd" BorderThickness="0,0,0,1" Padding="20,15">
+            <Border Grid.Row="0" Style="{StaticResource HeaderBorderStyle}">
                 <TextBox Text="{Binding SelectedNote.Title, UpdateSourceTrigger=PropertyChanged}"
-                         FontSize="20" FontWeight="Bold" BorderThickness="0" Background="Transparent"
+                         Style="{StaticResource TitleTextBoxStyle}"
                          IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedNote}" Value="{x:Null}">
-                                    <Setter Property="Text" Value="Выберите заметку"/>
-                                    <Setter Property="Foreground" Value="#999"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
                 </TextBox>
             </Border>
             
             <!-- Содержимое заметки -->
             <TextBox Grid.Row="1" Text="{Binding SelectedNote.Content, UpdateSourceTrigger=PropertyChanged}"
-                     Padding="20" BorderThickness="0" Background="White"
-                     TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                     FontSize="14"
+                     Style="{StaticResource ContentTextBoxStyle}"
                      IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedNote}" Value="{x:Null}">
-                                <Setter Property="Background">
-                                    <Setter.Value>
-                                        <VisualBrush AlignmentX="Center" AlignmentY="Center" Stretch="None">
-                                            <VisualBrush.Visual>
-                                                <TextBlock Text="Выберите заметку для редактирования" 
-                                                          Foreground="#ccc" FontSize="16"/>
-                                            </VisualBrush.Visual>
-                                        </VisualBrush>
-                                    </Setter.Value>
-                                </Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
             </TextBox>
             
             <!-- Панель кнопок -->
-            <Border Grid.Row="2" Background="#f9f9f9" BorderBrush="#ddd" BorderThickness="0,1,0,0" Padding="20,10">
+            <Border Grid.Row="2" Style="{StaticResource FooterBorderStyle}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Сохранить" Padding="15,8" Margin="0,0,10,0"
+                    <Button Content="Сохранить" Margin="0,0,10,0"
                             Command="{Binding SaveNoteCommand}"
-                            Background="#2196F3" Foreground="White" BorderThickness="0"
+                            Style="{StaticResource PrimaryButtonStyle}"
                             IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}"/>
-                    <Button Content="Удалить" Padding="15,8"
+                    <Button Content="Удалить" 
                             Command="{Binding DeleteNoteCommand}"
-                            Background="#f44336" Foreground="White" BorderThickness="0"
+                            Style="{StaticResource DangerButtonStyle}"
                             IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}"/>
                 </StackPanel>
             </Border>

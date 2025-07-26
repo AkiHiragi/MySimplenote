@@ -40,9 +40,22 @@ public class NoteService : INoteService
     public async Task<Note> UpdateNoteAsync(Note note)
     {
         using var context = new NoteDbContext();
-        note.UpdatedAt = DateTime.Now;
-        context.Notes.Update(note);
-        await context.SaveChangesAsync();
+
+        var existingNote = await context.Notes
+                                        .Include(n => n.Tags)
+                                        .FirstOrDefaultAsync(n => n.Id == note.Id);
+
+        if (existingNote != null)
+        {
+            existingNote.Title     = note.Title;
+            existingNote.Content   = note.Content;
+            existingNote.UpdatedAt = DateTime.Now;
+            existingNote.IsSynced  = note.IsSynced;
+
+            await context.SaveChangesAsync();
+            return existingNote;
+        }
+
         return note;
     }
 

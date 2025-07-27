@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -116,10 +117,19 @@ public partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(NewTagName)) return;
 
-        var existingTag = await _tagService.GetTagByNameAsync(NewTagName);
-        if (existingTag != null) return;
+        var trimmedName = newTagName.Trim();
 
-        var newTag     = new Tag { Name = NewTagName.Trim() };
+        var existingTag = await _tagService.GetTagByNameAsync(trimmedName);
+        if (existingTag != null)
+        {
+            NewTagName = string.Empty;
+            return;
+        }
+
+        var colors = new[] { "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336", "#607D8B", "#795548", "#009688" };
+        var randomColor = colors[Random.Shared.Next(colors.Length)];
+
+        var newTag     = new Tag { Name = trimmedName, Color = randomColor };
         var createdTag = await _tagService.CreateTagAsync(newTag);
         AllTags.Add(new TagViewModel(createdTag));
         NewTagName = string.Empty;
@@ -184,5 +194,86 @@ public partial class MainViewModel : ObservableObject
         var newTheme = CurrentTheme == "Light" ? "Dark" : "Light";
         _themeService.SetTheme(newTheme);
         CurrentTheme = newTheme;
+    }
+
+    [RelayCommand]
+    private async Task EditTagAsync(TagViewModel tag)
+    {
+        if (tag == null) return;
+
+        var updatedTag = tag.ToModel();
+        await _tagService.UpdateTagAsync(updatedTag);
+        await LoadTagsAsync();
+    }
+
+    [RelayCommand]
+    private async Task DeleteTagAsync(TagViewModel tag)
+    {
+        if (tag == null) return;
+
+        var notesWithTag = Notes.Where(n => n.Tags.Any(t => t.Id == tag.Id)).ToList();
+
+        if (notesWithTag.Any())
+        {
+            // TODO: добавить MessageBox с удалением
+        }
+
+        await _tagService.DeleteTagAsync(tag.Id);
+        AllTags.Remove(tag);
+
+        foreach (var note in Notes)
+        {
+            var tagToRemove = note.Tags.FirstOrDefault(t => t.Id == tag.Id);
+            if (tagToRemove != null)
+                note.Tags.Remove(tagToRemove);
+        }
+    }
+
+    [RelayCommand]
+    private async Task UpdateTagNameAsync(TagViewModel tag)
+    {
+        if (tag == null || string.IsNullOrWhiteSpace(tag.Name)) return;
+
+        var existingTag =
+            AllTags.FirstOrDefault(t => t.Id != tag.Id &&
+                                        t.Name.Equals(tag.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (existingTag != null)
+        {
+            await LoadTagsAsync();
+            return;
+        }
+
+        tag.Name = tag.Name.Trim();
+        var updatedTag = tag.ToModel();
+        await _tagService.UpdateTagAsync(updatedTag);
+
+        foreach (var note in Notes)
+        {
+            var noteTag = note.Tags.FirstOrDefault(t => t.Id == tag.Id);
+            if (noteTag != null)
+                noteTag.Name = tag.Name;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ChangeTagColorAsync(TagViewModel tag)
+    {
+        if (tag == null) return;
+
+        var colors = new[] { "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336", "#607D8B", "#795548", "#009688" };
+        var currentIndex = Array.IndexOf(colors, tag.Color);
+        var nextIndex = (currentIndex + 1) % colors.Length;
+
+        tag.Color = colors[nextIndex];
+
+        var updatedTag = tag.ToModel();
+        await _tagService.UpdateTagAsync(updatedTag);
+
+        foreach (var note in Notes)
+        {
+            var noteTag = note.Tags.FirstOrDefault(t => t.Id == tag.Id);
+            if (noteTag != null)
+                noteTag.Color = tag.Color;
+        }
     }
 }

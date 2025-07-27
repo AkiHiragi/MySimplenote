@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+
     <Border Style="{DynamicResource SidebarBorderStyle}" Width="250">
         <Grid>
             <Grid.RowDefinitions>
@@ -60,26 +61,90 @@
                 Style="{DynamicResource NotesListBoxStyle}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Margin="0,2" Padding="10,5">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse
-                                    Fill="{Binding Color}"
-                                    Height="12"
-                                    VerticalAlignment="Center"
-                                    Width="12" />
-                                <TextBlock
-                                    Margin="8,0,0,0"
-                                    Style="{DynamicResource TagTextStyle}"
-                                    Text="{Binding Name}" />
+                        <Border
+                            Background="Transparent"
+                            BorderBrush="{DynamicResource LightBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Margin="0,1"
+                            Padding="8,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--  Цветной кружок (кликабельный для смены цвета)  -->
+                                <Button
+                                    Background="{Binding Color}"
+                                    Command="{Binding DataContext.ChangeTagColorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Grid.Column="0"
+                                    Height="18"
+                                    Style="{DynamicResource BaseButtonStyle}"
+                                    ToolTip="Изменить цвет (клик)"
+                                    Width="18">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="9">
+                                                <Border.Effect>
+                                                    <DropShadowEffect
+                                                        BlurRadius="2"
+                                                        Opacity="0.3"
+                                                        ShadowDepth="1" />
+                                                </Border.Effect>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!--  Название тега  -->
+                                <TextBox
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Foreground="{DynamicResource PrimaryTextBrush}"
+                                    Grid.Column="1"
+                                    Margin="10,0,8,0"
+                                    Style="{DynamicResource BaseTextBoxStyle}"
+                                    Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                    ToolTip="Редактировать название"
+                                    VerticalAlignment="Center">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding
+                                            Command="{Binding DataContext.UpdateTagNameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Key="Enter" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+
+                                <!--  Кнопка добавления к заметке  -->
                                 <Button
                                     Command="{Binding DataContext.AddTagToNoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
                                     Content="+"
+                                    Grid.Column="2"
                                     Height="20"
-                                    Margin="5,0,0,0"
                                     Style="{DynamicResource CreateButtonStyle}"
+                                    ToolTip="Добавить к текущей заметке"
                                     Width="20" />
-                            </StackPanel>
+
+                                <!--  Кнопка удаления  -->
+                                <Button
+                                    Command="{Binding DataContext.DeleteTagCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Content="×"
+                                    Grid.Column="3"
+                                    Height="20"
+                                    Margin="4,0,0,0"
+                                    Style="{DynamicResource DangerButtonStyle}"
+                                    ToolTip="Удалить тег"
+                                    Width="20" />
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

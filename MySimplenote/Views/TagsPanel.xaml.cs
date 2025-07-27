@@ -2,9 +2,9 @@
 
 namespace MySimplenote.Views;
 
-public partial class TagPanel : UserControl
+public partial class TagsPanel : UserControl
 {
-    public TagPanel()
+    public TagsPanel()
     {
         InitializeComponent();
     }

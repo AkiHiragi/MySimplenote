@@ -8,10 +8,11 @@ using MySimplenote.Services;
 
 namespace MySimplenote.ViewModels;
 
-public partial class MainViewModel:ObservableObject
+public partial class MainViewModel : ObservableObject
 {
-    private readonly INoteService _noteService;
-    private readonly ITagService  _tagService;
+    private readonly INoteService  _noteService;
+    private readonly ITagService   _tagService;
+    private readonly IThemeService _themeService;
 
     [ObservableProperty] private ObservableCollection<NoteViewModel> notes = [];
 
@@ -27,12 +28,18 @@ public partial class MainViewModel:ObservableObject
 
     [ObservableProperty] private bool isTagFilterActive = false;
 
+    [ObservableProperty] private string currentTheme = "Light";
+
     public MainViewModel()
     {
-        _noteService = new NoteService();
-        _tagService  = new TagService();
-        _            = LoadNotesAsync();
-        _            = LoadTagsAsync();
+        _noteService  = new NoteService();
+        _tagService   = new TagService();
+        _themeService = new ThemeService();
+
+        CurrentTheme = _themeService.CurrentTheme;
+
+        _ = LoadNotesAsync();
+        _ = LoadTagsAsync();
     }
 
     [RelayCommand]
@@ -49,17 +56,17 @@ public partial class MainViewModel:ObservableObject
     [RelayCommand]
     private async Task CreateNoteAsync()
     {
-        var newNote     = new Note { Title = "Новая заметка" };
-        var createdNote = await _noteService.CreateNoteAsync(newNote);
+        var newNote       = new Note { Title = "Новая заметка" };
+        var createdNote   = await _noteService.CreateNoteAsync(newNote);
         var noteViewModel = new NoteViewModel(createdNote);
-        Notes.Insert(0,noteViewModel);
+        Notes.Insert(0, noteViewModel);
         SelectedNote = noteViewModel;
     }
 
     [RelayCommand]
     private async Task SaveNoteAsync()
     {
-        if(SelectedNote==null) return;
+        if (SelectedNote == null) return;
 
         var noteModel = SelectedNote.ToModel();
         await _noteService.UpdateNoteAsync(noteModel);
@@ -69,7 +76,7 @@ public partial class MainViewModel:ObservableObject
     [RelayCommand]
     private async Task DeleteNoteAsync()
     {
-        if (SelectedNote==null)return;
+        if (SelectedNote == null) return;
 
         await _noteService.DeleteNoteAsync(SelectedNote.Id);
         Notes.Remove(SelectedNote);
@@ -92,7 +99,7 @@ public partial class MainViewModel:ObservableObject
             Notes.Add(new NoteViewModel(note));
         }
     }
-    
+
     [RelayCommand]
     private async Task LoadTagsAsync()
     {
@@ -108,10 +115,10 @@ public partial class MainViewModel:ObservableObject
     private async Task CreateTagAsync()
     {
         if (string.IsNullOrWhiteSpace(NewTagName)) return;
-    
+
         var existingTag = await _tagService.GetTagByNameAsync(NewTagName);
         if (existingTag != null) return;
-    
+
         var newTag     = new Tag { Name = NewTagName.Trim() };
         var createdTag = await _tagService.CreateTagAsync(newTag);
         AllTags.Add(new TagViewModel(createdTag));
@@ -122,7 +129,7 @@ public partial class MainViewModel:ObservableObject
     private async Task AddTagToNoteAsync(TagViewModel tag)
     {
         if (SelectedNote == null || tag == null) return;
-    
+
         if (!SelectedNote.Tags.Any(t => t.Id == tag.Id))
         {
             await _noteService.AddTagToNoteAsync(SelectedNote.Id, tag.Id);
@@ -134,7 +141,7 @@ public partial class MainViewModel:ObservableObject
     private async Task RemoveTagFromNoteAsync(TagViewModel tag)
     {
         if (SelectedNote == null || tag == null) return;
-    
+
         await _noteService.RemoveTagFromNoteAsync(SelectedNote.Id, tag.Id);
         var tagToRemove = SelectedNote.Tags.FirstOrDefault(t => t.Id == tag.Id);
         if (tagToRemove != null)
@@ -152,7 +159,7 @@ public partial class MainViewModel:ObservableObject
             await LoadNotesAsync();
             return;
         }
-    
+
         IsTagFilterActive = true;
         SelectedTag       = tag;
         var filteredNotes = await _noteService.GetNotesByTagAsync(tag.Id);
@@ -169,5 +176,13 @@ public partial class MainViewModel:ObservableObject
         IsTagFilterActive = false;
         SelectedTag       = null;
         await LoadNotesAsync();
+    }
+
+    [RelayCommand]
+    private void ToggleTheme()
+    {
+        var newTheme = CurrentTheme == "Light" ? "Dark" : "Light";
+        _themeService.SetTheme(newTheme);
+        CurrentTheme = newTheme;
     }
 }

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using MySimplenote.Models;
 using MySimplenote.Services;
 
@@ -11,9 +13,10 @@ namespace MySimplenote.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly INoteService  _noteService;
-    private readonly ITagService   _tagService;
-    private readonly IThemeService _themeService;
+    private readonly INoteService   _noteService;
+    private readonly ITagService    _tagService;
+    private readonly IThemeService  _themeService;
+    private readonly IExportService _exportService;
 
     [ObservableProperty] private ObservableCollection<NoteViewModel> notes = [];
 
@@ -33,9 +36,10 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel()
     {
-        _noteService  = new NoteService();
-        _tagService   = new TagService();
-        _themeService = new ThemeService();
+        _noteService   = new NoteService();
+        _tagService    = new TagService();
+        _themeService  = new ThemeService();
+        _exportService = new ExportService(_noteService);
 
         CurrentTheme = _themeService.CurrentTheme;
 
@@ -275,5 +279,49 @@ public partial class MainViewModel : ObservableObject
             if (noteTag != null)
                 noteTag.Color = tag.Color;
         }
+    }
+
+    [RelayCommand]
+    private async Task ExportCurrentNoteAsync()
+    {
+        if (SelectedNote == null) return;
+
+        var saveDialog = new SaveFileDialog
+        {
+            Filter     = "Markdown Files (*.md)|*.md|All files (*.*)|*.*",
+            DefaultExt = "md",
+            FileName   = SanitizeFileName(SelectedNote.Title) + ".md"
+        };
+
+        if (saveDialog.ShowDialog() == true)
+        {
+            var note = SelectedNote.ToModel();
+            await _exportService.ExportNoteToMarkdownAsync(note, saveDialog.FileName);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportAllNotesAsync()
+    {
+        var saveDialog = new SaveFileDialog
+        {
+            Filter = "Выберите любой файл в папке|*.*",
+            Title  = "Выберите папку для экспорта (выберите любой файл в нужной папке)"
+        };
+
+        if (saveDialog.ShowDialog() == true)
+        {
+            var folderPath = Path.GetDirectoryName(saveDialog.FileName);
+            if (!string.IsNullOrEmpty(folderPath))
+            {
+                await _exportService.ExportAllNotesToMarkdownAsync(folderPath);
+            }
+        }
+    }
+
+    private string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        return invalidChars.Aggregate(fileName, (current, c) => current.Replace(c, '_'));
     }
 }

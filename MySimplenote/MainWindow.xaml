@@ -170,8 +170,28 @@
                         Command="{Binding SaveNoteCommand}"
                         Content="Сохранить"
                         IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}"
-                        Margin="0,0,10,0"
+                        Margin="0,0,5,0"
                         Style="{DynamicResource PrimaryButtonStyle}" />
+
+                    <Button
+                        Background="{DynamicResource BorderBrush}"
+                        Command="{Binding ExportCurrentNoteCommand}"
+                        Content="Экспорт заметки"
+                        Foreground="{DynamicResource PrimaryTextBrush}"
+                        IsEnabled="{Binding SelectedNote, Converter={x:Static converters:BooleanConverter.IsNotNull}}"
+                        Margin="0,0,5,0"
+                        Padding="15,8"
+                        Style="{DynamicResource BaseButtonStyle}" />
+
+                    <Button
+                        Background="{DynamicResource BorderBrush}"
+                        Command="{Binding ExportAllNotesCommand}"
+                        Content="Экспорт всех"
+                        Foreground="{DynamicResource PrimaryTextBrush}"
+                        Margin="0,0,5,0"
+                        Padding="15,8"
+                        Style="{DynamicResource BaseButtonStyle}" />
+
                     <Button
                         Command="{Binding DeleteNoteCommand}"
                         Content="Удалить"
